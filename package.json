@@ -1,0 +1,11 @@
+{
+  "name": "methode-langue",
+  "version": "0.1.0",
+  "private": true,
+  "description": "App d'apprentissage des langues style Michel Thomas (prof + 2 eleves + utilisateur).",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "python -m http.server 8000"
+  },
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,11 @@
+# Config Netlify — hébergement du front + fonction « question au prof ».
+
+[build]
+  # Le front servi à la racine du site. La page de test : /chat-prof.html
+  publish = "app"
+  # Dossier des fonctions serverless (le mini-backend).
+  functions = "netlify/functions"
+
+# Node 18+ fournit fetch nativement — pas de dépendance npm nécessaire.
+[functions]
+  node_bundler = "esbuild"
