@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Méthode audio — Cours</title>
+<meta name="theme-color" content="#1A2232">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Méthode Audio">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=DM+Serif+Display&family=DM+Serif+Display:ital@1&family=Fraunces:ital,wght@0,500;1,400&family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&family=Lilita+One&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- Voile Inscription -->
+  <div class="veil" id="signup">
+    <div class="veil-tag">Méthode · Inscription</div>
+    <h1>Bienvenue en classe</h1>
+    <p>Vous serez le 3ᵉ élève. Le professeur vous appellera par votre prénom au moment de répondre.</p>
+    <div class="lesson-picker" id="lessonPicker" style="display:none">
+      <div class="lp-label">Choisir une leçon</div>
+      <div class="lp-cards" id="lpCards"></div>
+    </div>
+    <div class="field">
+      <label for="nameInput">Votre prénom</label>
+      <input id="nameInput" type="text" placeholder="ex : Marie" autocomplete="given-name">
+    </div>
+    <label class="opt"><input type="checkbox" id="ttsChk" checked> Voix de démo (si pas d'audio chargé)</label>
+    <button class="btn-veil primary" id="enterBtn">Entrer en classe →</button>
+    <button class="linklike" id="importBtn">Charger une leçon (.mtlesson)</button>
+    <input type="file" id="fileImport" accept=".mtlesson,.json,application/json" style="display:none">
+  </div>
+
+  <!-- Voile Bilan -->
+  <div class="veil hidden" id="recap">
+    <div class="veil-tag">Méthode · Bilan</div>
+    <h1 id="recapHi">Bravo !</h1>
+    <div class="recap-big" id="recapCount">—</div>
+    <div class="recap-line">structures travaillées aujourd'hui</div>
+    <p>Tu as suivi toute la leçon. Le suivi des erreurs arrive dans une prochaine version.</p>
+    <button class="btn-veil primary" id="againBtn">↺ Refaire la leçon</button>
+  </div>
+
+  <!-- Header transparent en overlay -->
+  <div class="overlay-top">
+    <div class="ot-tag" id="topTag">● Méthode audio</div>
+    <div class="ot-dot"></div>
+  </div>
+
+  <!-- Zone tableau — toute la surface, peuplée par engine.js -->
+  <div class="word-zone" id="slate"></div>
+
+  <!-- Zone bip — overlay question au tour du client -->
+  <div class="bip-zone" id="bipZone" style="display:none">
+
+    <div class="bip-question">
+      <div class="bip-q-title"></div>
+      <div class="bip-q-phrase" id="bipPhrase"></div>
+      <div class="bip-context" id="bipContext" style="display:none"></div>
+    </div>
+    <button class="voir-rep-btn" id="voirRepBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      voir la réponse
+    </button>
+  </div>
+
+  <!-- Éléments moteur cachés -->
+  <div id="speaker" style="display:none">Professeur</div>
+  <div id="stage"   style="display:none"></div>
+  <div id="caption" style="display:none"></div>
+
+  <!-- Overlay bas — personnages + panel micro -->
+  <div class="overlay-bottom panel disabled" id="panel">
+
+    <!-- Personnages -->
+    <div class="chars" id="vocalStage">
+      <div class="char-item" id="vs-prof" data-role="prof" data-pos="center">
+        <div class="char-av">
+          <div class="char-rings"></div>
+          <svg viewBox="0 0 56 62" fill="none" aria-hidden="true"><circle cx="28" cy="19" r="13" fill="white"/><path d="M4 60c0-18 48-18 48 0" fill="white"/></svg>
+        </div>
+        <div class="char-name" id="vsl-prof">Professeur</div>
+      </div>
+      <div class="char-item" id="vs-eleve1" data-role="eleve1" data-pos="left">
+        <div class="char-av">
+          <div class="char-rings"></div>
+          <svg viewBox="0 0 56 62" fill="none" aria-hidden="true"><circle cx="28" cy="19" r="13" fill="white"/><path d="M4 60c0-18 48-18 48 0" fill="white"/></svg>
+        </div>
+        <div class="char-name" id="vsl-eleve1">Sophie</div>
+      </div>
+      <div class="char-item" id="vs-eleve2" data-role="eleve2" data-pos="right">
+        <div class="char-av">
+          <div class="char-rings"></div>
+          <svg viewBox="0 0 56 62" fill="none" aria-hidden="true"><circle cx="28" cy="19" r="13" fill="white"/><path d="M4 60c0-18 48-18 48 0" fill="white"/></svg>
+        </div>
+        <div class="char-name" id="vsl-eleve2">Julien</div>
+      </div>
+    </div>
+
+    <!-- Barre de progression -->
+    <div class="progress-wrap">
+      <span class="progress-pct" id="progressPct">0%</span>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-steps" id="progressSteps">0 / 0</span>
+    </div>
+
+    <!-- Actions normales (quelqu'un d'autre parle) -->
+    <div class="normal-actions">
+      <button class="act-btn" id="restartBtn">↺</button>
+      <button class="act-btn primary play-btn" id="playBtn">
+        <svg class="ico-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        <svg class="ico-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+      </button>
+      <button class="act-btn">✕</button>
+    </div>
+
+    <!-- Bouton retour question (visible uniquement après "voir la réponse") -->
+    <button class="revenir-btn" id="revenirBtn">← Revenir à la question</button>
+
+    <!-- Panel bip (tour du client) -->
+    <div class="bip-panel">
+      <div class="bip-card">
+        <div class="bip-hold-label" id="micLabel">maintiens pour parler</div>
+        <!-- Canvas moteur (caché, utilisé par engine.js pour la visualisation) -->
+        <canvas class="moi-wave" id="moiWave" width="260" height="18"></canvas>
+        <div class="bip-wave-row">
+          <div class="bip-wave-side l">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span>
+          </div>
+          <button class="bip-mic" id="mic" disabled>
+            <div class="bip-ring"></div>
+            <svg class="bip-ico-mic" width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="rgba(251,191,36,.90)" stroke-width="1.8" stroke-linecap="round">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M19 10a7 7 0 0 1-14 0"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+            <svg class="bip-ico-stop" width="22" height="22" viewBox="0 0 24 24" fill="white">
+              <rect x="6" y="6" width="12" height="12" rx="2"/>
+            </svg>
+          </button>
+          <div class="bip-wave-side r">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span>
+          </div>
+        </div>
+        <div class="bip-mic-name">moi</div>
+      </div>
+      <div class="bip-actions">
+        <button class="bip-act replay" id="replayBtn" disabled>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          ma réponse
+        </button>
+        <button class="bip-act retry">↺</button>
+        <button class="bip-act next" id="contBtn" style="display:none">Continuer →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       QUESTION AU PROF (design Q1) — VISUEL SEULEMENT, non branché.
+       Bouton bulle + 2 pages : saisie de la question, puis chat.
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Bouton question — bulle 3D « signature » (C3) -->
+  <button class="q-fab" id="qFab" title="Poser une question au professeur" aria-label="Poser une question au professeur">
+    <svg viewBox="0 0 120 120">
+      <defs>
+        <linearGradient id="qFabBody" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#283450"/><stop offset="1" stop-color="#101726"/>
+        </linearGradient>
+        <linearGradient id="qFabRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#FFE7A0"/><stop offset=".5" stop-color="#E0A52E"/><stop offset="1" stop-color="#8A5A10"/>
+        </linearGradient>
+        <filter id="qFabBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4"/></filter>
+      </defs>
+      <ellipse cx="60" cy="110" rx="23" ry="4.5" fill="#000" opacity=".40" filter="url(#qFabBlur)"/>
+      <path d="M60 12C82.1 12 100 29.9 100 52C100 74.1 82.1 92 60 92C52.4 92 45.3 89.9 39.3 86.2L27 99.5C29.8 91.3 31.6 85.6 32.6 81.3C24.8 74 20 63.6 20 52C20 29.9 37.9 12 60 12Z"
+            fill="url(#qFabBody)" stroke="url(#qFabRim)" stroke-width="2.2"/>
+      <text x="60" y="69" text-anchor="middle" font-family="'Lilita One',cursive" font-size="47" fill="#F59E0B" opacity=".5" filter="url(#qFabBlur)">?</text>
+      <text x="60" y="69" text-anchor="middle" font-family="'Lilita One',cursive" font-size="47" fill="#FCD34D">?</text>
+    </svg>
+  </button>
+
+  <!-- PAGE 1 — saisie de la question (bottom sheet, la leçon reste derrière) -->
+  <div class="q-overlay hidden" id="qSheet">
+    <div class="q-dim" data-q-close></div>
+    <div class="q-sheet">
+      <div class="q-grip"></div>
+      <div class="q-sheet-head">
+        <div class="q-sheet-bubble">
+          <svg viewBox="0 0 120 120">
+            <path d="M60 12C82.1 12 100 29.9 100 52C100 74.1 82.1 92 60 92C52.4 92 45.3 89.9 39.3 86.2L27 99.5C29.8 91.3 31.6 85.6 32.6 81.3C24.8 74 20 63.6 20 52C20 29.9 37.9 12 60 12Z"
+                  fill="url(#qFabBody)" stroke="url(#qFabRim)" stroke-width="2.4"/>
+            <text x="60" y="69" text-anchor="middle" font-family="'Lilita One',cursive" font-size="47" fill="#FCD34D">?</text>
+          </svg>
+        </div>
+        <div>
+          <div class="q-sheet-title">Une question pour le professeur ?</div>
+          <div class="q-sheet-sub">la leçon est en pause</div>
+        </div>
+      </div>
+      <textarea class="q-input" id="qInput" rows="1" placeholder="Écris ta question…"></textarea>
+      <div class="q-sheet-actions">
+        <button class="q-cancel" data-q-close>✕</button>
+        <button class="q-send" id="qSheetSend">
+          Demander au professeur
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2 — chat / réponse du prof -->
+  <div class="q-overlay hidden" id="qChat">
+    <div class="overlay-top">
+      <div class="ot-tag">● question au professeur</div>
+      <button class="q-chat-close" data-q-close aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="q-chat-zone" id="qChatZone">
+      <!-- Question de l'élève (rappel) -->
+      <div class="q-myq" id="qMyq">
+        <b>ma question</b>
+        <span id="qMyqText">pourquoi on dit it's et pas it is ?</span>
+      </div>
+
+      <!-- Le professeur répond -->
+      <div class="q-prof">
+        <span class="q-prof-ring"></span>
+        <span class="q-prof-ring r2"></span>
+        <span class="q-prof-av">🎓</span>
+      </div>
+      <div class="q-prof-name">Le professeur répond</div>
+      <div class="q-pwave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="q-answer" id="qAnswer">
+        <!-- exemple statique de rendu (design only) -->
+        <p>Excellente question ! <span class="q-key">Les anglais adorent raccourcir ce qu'ils disent</span>. <span class="q-hl">IT IS</span> n'est pas faux, mais à l'oral personne le dit en entier — tout le monde colle les deux en <span class="q-hl">IT'S</span>.</p>
+
+        <!-- Style 1 : cartes « paires » (FR → EN) -->
+        <div class="q-tab">
+          <div class="q-row q-cat-construction"><span class="q-rfr">version complète</span><span class="q-ren">IT IS</span></div>
+          <div class="q-row q-cat-contraction"><span class="q-rfr">version parlée</span><span class="q-ren">IT'S</span></div>
+        </div>
+
+        <p>Et ça marche avec tout le verbe être :</p>
+
+        <!-- Style 2 : grille type prof (conjugaison) -->
+        <table class="q-grid">
+          <caption>le verbe être, version parlée</caption>
+          <thead><tr><th>français</th><th>anglais</th></tr></thead>
+          <tbody>
+            <tr><td>je suis</td><td><span class="q-hl">I'M</span></td></tr>
+            <tr><td>tu es</td><td><span class="q-hl">YOU'RE</span></td></tr>
+            <tr><td>il est</td><td><span class="q-hl">HE'S</span></td></tr>
+          </tbody>
+        </table>
+
+        <p>Le réflexe : <span class="q-key">à l'oral, c'est toujours la version courte qui gagne</span>. Tu vas vite le sentir tout seul.</p>
+      </div>
+
+      <div class="q-chat-bottom">
+      <!-- Relance directe (le client réécrit sur la même page) -->
+      <div class="q-followup">
+        <label class="q-fu-field" id="qFuField">
+          <svg class="q-fu-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <span class="q-fu-cue"><i class="q-fu-caret"></i>Écris ici pour reposer une question…</span>
+          <input class="q-fu-input" id="qFuInput">
+        </label>
+        <button class="q-fu-send" id="qFuSend" aria-label="Envoyer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+        </button>
+      </div>
+      <div class="q-chat-actions">
+        <button class="q-replay" aria-label="Réécouter">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button class="q-resume" data-q-close>Reprendre la leçon →</button>
+      </div>
+      </div>
+    </div>
+
+    <!-- Rond flèche bas — descend voir les actions -->
+    <button class="q-scrolldown" id="qScrollDown" aria-label="Voir la suite et les actions">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js"></script>
+<script src="sample-lesson.js"></script>
+<script src="engine.js"></script>
+<script>
+  // Bandeau "Ajouter à l'écran d'accueil" uniquement sur Safari iOS hors standalone
+  (function(){
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
+    const isStandalone = navigator.standalone === true;
+    const isSafari = /safari/i.test(navigator.userAgent) && !/chrome|crios|fxios/i.test(navigator.userAgent);
+    if(!isIOS || isStandalone || !isSafari) return;
+    const b = document.createElement('div');
+    b.id = 'pwa-hint';
+    b.innerHTML = `
+      <span>Pour l'affichage plein écran :</span>
+      <strong>Partager</strong> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      puis <strong>Sur l'écran d'accueil</strong>
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;font-size:16px;cursor:pointer;padding:0 0 0 8px;opacity:.6">✕</button>`;
+    document.body.appendChild(b);
+  })();
+</script>
+
+<script>
+  /* ── Navigation visuelle « question au prof » (design only, NON branché) ──
+     Sert juste à prévisualiser le bouton et les 2 pages. Aucun appel API. */
+  (function(){
+    const fab     = document.getElementById('qFab');
+    const sheet   = document.getElementById('qSheet');
+    const chat    = document.getElementById('qChat');
+    const input   = document.getElementById('qInput');
+    const send    = document.getElementById('qSheetSend');
+    const myqText = document.getElementById('qMyqText');
+    const chatZone= document.getElementById('qChatZone');
+    const scrollDn= document.getElementById('qScrollDown');
+    if(!fab) return;
+
+    const open  = el => el.classList.remove('hidden');
+    const close = el => el.classList.add('hidden');
+
+    // Pause / reprise de la leçon en s'appuyant sur le moteur (engine.js).
+    // Le bouton play porte la classe "paused" quand la leçon JOUE.
+    let weePaused = false;
+    function pauseLesson(){
+      const pb = document.getElementById('playBtn');
+      if(pb && pb.classList.contains('paused') && typeof togglePause === 'function'){
+        togglePause(); weePaused = true;
+      }
+    }
+    function resumeLesson(){
+      if(weePaused && typeof togglePause === 'function'){ togglePause(); }
+      weePaused = false;
+    }
+
+    // Bouton bulle → met la leçon en pause + ouvre la page saisie
+    fab.addEventListener('click', () => { pauseLesson(); open(sheet); setTimeout(()=>input.focus(), 60); });
+
+    // Champ qui grandit tout seul
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    });
+
+    // « Demander au professeur » → page chat (affiche la question tapée, réponse = exemple statique)
+    send.addEventListener('click', () => {
+      const q = input.value.trim();
+      if(q) myqText.textContent = q;
+      close(sheet); open(chat);
+      // On démarre toujours barre masquée + rond flèche visible
+      chat.classList.remove('show-controls');
+      chatZone.scrollTop = 0;
+    });
+
+    // Rond flèche → descend tout en bas et révèle la barre complète
+    scrollDn.addEventListener('click', () => {
+      chat.classList.add('show-controls');
+      requestAnimationFrame(() => { chatZone.scrollTop = chatZone.scrollHeight; });
+    });
+
+    // Masque l'indice « | Écris ici… » dès qu'il y a du texte
+    const fuInput = document.getElementById('qFuInput');
+    const fuField = document.getElementById('qFuField');
+    if(fuInput && fuField){
+      fuInput.addEventListener('input', () => {
+        fuField.classList.toggle('has-text', fuInput.value.length > 0);
+      });
+    }
+
+    // Toute croix / fond / « Reprendre » ferme, reprend la leçon
+    document.querySelectorAll('[data-q-close]').forEach(el => {
+      el.addEventListener('click', () => {
+        close(sheet); close(chat);
+        input.value = ''; input.style.height = 'auto';
+        resumeLesson();
+      });
+    });
+  })();
+</script>
+</body>
+</html>

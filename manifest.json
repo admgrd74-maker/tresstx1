@@ -1,0 +1,11 @@
+{
+  "name": "Méthode Audio",
+  "short_name": "Méthode",
+  "description": "Apprenez l'anglais avec la méthode audio",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1A2232",
+  "theme_color": "#1A2232",
+  "start_url": "./",
+  "scope": "./"
+}
